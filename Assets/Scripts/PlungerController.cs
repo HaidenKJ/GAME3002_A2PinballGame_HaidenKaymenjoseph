@@ -15,6 +15,7 @@ public class PlungerController : MonoBehaviour
 
     private Rigidbody rb;
     private SpringJoint springJoint;
+    private Collider plungerCollider;
     private float currentPull = 0f;
     private bool isCharging = false;
     private bool hasLaunched = false;
@@ -38,6 +39,17 @@ public class PlungerController : MonoBehaviour
         springJoint.damper = damper;
         springJoint.minDistance = 0f;
         springJoint.maxDistance = 0f;
+
+        // Zero out bounciness so the ball just rests on the tip while charging
+        plungerCollider = GetComponent<Collider>();
+        plungerCollider.material = new PhysicsMaterial("PlungerMat")
+        {
+            bounciness = 0f,
+            dynamicFriction = 0f,
+            staticFriction = 0f,
+            bounceCombine = PhysicsMaterialCombine.Minimum,
+            frictionCombine = PhysicsMaterialCombine.Minimum
+        };
     }
 
     private void Update()
@@ -51,8 +63,6 @@ public class PlungerController : MonoBehaviour
         {
             currentPull += chargeRate * Time.fixedDeltaTime;
             currentPull = Mathf.Clamp(currentPull, 0f, maxPullDistance);
-
-            // Hold it back against the spring's resistance
             rb.MovePosition(restPosition - transform.forward * currentPull);
         }
     }
@@ -70,10 +80,16 @@ public class PlungerController : MonoBehaviour
     {
         isCharging = false;
         hasLaunched = true;
+
+        // Store pull before clearing it
+        float storedPull = currentPull;
         currentPull = 0f;
 
-        // Just stop holding it — the SpringJoint fires it forward on its own
-        Invoke(nameof(ResetPlunger), 1f);
+        // SpringJoint fires naturally + manual impulse using stored pull
+        float forceMagnitude = springConstant * storedPull;
+        rb.AddForce(transform.forward * forceMagnitude, ForceMode.Impulse);
+
+        Invoke(nameof(ResetPlunger), 2f);
     }
 
     private void ResetPlunger()

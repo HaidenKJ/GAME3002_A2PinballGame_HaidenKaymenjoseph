@@ -2,19 +2,25 @@ using UnityEngine;
 
 public class BallController : MonoBehaviour
 {
+    [Header("Ball Settings")]
+    [SerializeField] private LayerMask destroyBallLayer;
+
     private Rigidbody rb;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
-
-        // Freeze for one frame so the ball spawns cleanly before physics kicks in
         rb.constraints = RigidbodyConstraints.FreezeAll;
     }
 
     private void Start()
     {
-        // Release constraints after first frame so it settles naturally onto the surface
         rb.constraints = RigidbodyConstraints.None;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (((1 << collision.gameObject.layer) & destroyBallLayer) != 0)
+            GameManager.Instance.BallDrained(collision.gameObject.name);
     }
 }

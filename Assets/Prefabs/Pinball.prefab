@@ -154,6 +154,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c167a3f108d51046a55d85d3cdd437c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BallController
+  destroyBallLayer:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!114 &7569905527246111601
 MonoBehaviour:
   m_ObjectHideFlags: 0

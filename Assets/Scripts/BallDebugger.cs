@@ -20,9 +20,7 @@ public class BallDebugger : MonoBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        DebugLogger.Log($"Ball collided with: {collision.gameObject.name} | " +
-                        $"Material: {collision.collider.material.name} | " +
-                        $"Impulse: {collision.impulse.magnitude:F2}");
+        DebugLogger.Log($"Ball collided with: {collision.gameObject.name} | " + $"Material: {collision.collider.material.name} | " + $"Impulse: {collision.impulse.magnitude:F2}");
     }
 
     private void OnTriggerEnter(Collider other)

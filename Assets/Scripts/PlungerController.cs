@@ -5,13 +5,13 @@ using UnityEngine;
 public class PlungerController : MonoBehaviour
 {
     [Header("Spring Settings")]
-    [SerializeField] private float springConstant = 50f;
-    [SerializeField] private float damper = 10f;
-    [SerializeField] private float maxPullDistance = 0.5f;
-    [SerializeField] private float chargeRate = 0.3f;
+    [SerializeField] private float springConstant = 50f;    // k in Hooke's Law (F = kx)
+    [SerializeField] private float damper = 10f;            // Dampens oscillation after launch
+    [SerializeField] private float maxPullDistance = 0.5f;  // Maximum charge distance (x in F = kx)
+    [SerializeField] private float chargeRate = 0.3f;       // How fast the plunger pulls back per second
 
     [Header("References")]
-    [SerializeField] private Rigidbody anchorRigidbody;
+    [SerializeField] private Rigidbody anchorRigidbody;     // Kinematic anchor the spring joint connects to
 
     private Rigidbody rb;
     private SpringJoint springJoint;
@@ -25,12 +25,13 @@ public class PlungerController : MonoBehaviour
     {
         rb = GetComponent<Rigidbody>();
         rb.useGravity = false;
-        rb.constraints = RigidbodyConstraints.FreezePositionX |
-                         RigidbodyConstraints.FreezePositionY |
-                         RigidbodyConstraints.FreezeRotation;
+
+        // Constrain plunger to only slide along its forward axis
+        rb.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezePositionY | RigidbodyConstraints.FreezeRotation;
 
         restPosition = rb.position;
 
+        // Configure SpringJoint via script, spring and damper set from serialized values
         springJoint = GetComponent<SpringJoint>();
         springJoint.connectedBody = anchorRigidbody;
         springJoint.autoConfigureConnectedAnchor = false;
@@ -40,7 +41,7 @@ public class PlungerController : MonoBehaviour
         springJoint.minDistance = 0f;
         springJoint.maxDistance = 0f;
 
-        // Zero out bounciness so the ball just rests on the tip while charging
+        // Zero out bounciness so the ball rests on the tip without bouncing during charge
         plungerCollider = GetComponent<Collider>();
         plungerCollider.material = new PhysicsMaterial("PlungerMat")
         {
@@ -61,6 +62,7 @@ public class PlungerController : MonoBehaviour
     {
         if (isCharging)
         {
+            // Accumulate pull distance up to max, then hold position via physics
             currentPull += chargeRate * Time.fixedDeltaTime;
             currentPull = Mathf.Clamp(currentPull, 0f, maxPullDistance);
             rb.MovePosition(restPosition - transform.forward * currentPull);
@@ -81,11 +83,11 @@ public class PlungerController : MonoBehaviour
         isCharging = false;
         hasLaunched = true;
 
-        // Store pull before clearing it
+        // Store pull before clearing, F = kx where x is storedPull
         float storedPull = currentPull;
         currentPull = 0f;
 
-        // SpringJoint fires naturally + manual impulse using stored pull
+        // Apply impulse force, SpringJoint releases naturally alongside this
         float forceMagnitude = springConstant * storedPull;
         rb.AddForce(transform.forward * forceMagnitude, ForceMode.Impulse);
 
@@ -94,6 +96,7 @@ public class PlungerController : MonoBehaviour
 
     private void ResetPlunger()
     {
+        // Kill all momentum and return plunger to rest position
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
         rb.MovePosition(restPosition);

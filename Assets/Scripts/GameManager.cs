@@ -1,5 +1,7 @@
 using UnityEngine;
+using TMPro;
 
+// Manages game state including score, ball count, and win/lose conditions
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
@@ -9,16 +11,22 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Transform ballSpawn;
     [SerializeField] private int maxBalls = 3;
 
+    [Header("Score Settings")]
+    [SerializeField] private TextMeshProUGUI scoreText;
+
     private int ballsRemaining;
+    private int currentScore;
     private GameObject currentBall;
 
     private void Awake()
     {
+        // Singleton pattern, only one GameManager allowed
         if (Instance == null) Instance = this;
         else Destroy(gameObject);
 
         ballsRemaining = maxBalls;
-        DebugLogger.Log($"Game started | Balls remaining: {ballsRemaining}");
+        currentScore = 0;
+        UpdateScoreUI();
     }
 
     private void Start()
@@ -28,9 +36,11 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        // R resets the ball manually
         if (Input.GetKeyDown(KeyCode.R))
             LoseBall("Manual reset");
 
+        // 1 removes a ball, 2 adds a ball (debug only)
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             ballsRemaining = Mathf.Max(0, ballsRemaining - 1);
@@ -44,7 +54,16 @@ public class GameManager : MonoBehaviour
             DebugLogger.Log($"Balls increased | Balls remaining: {ballsRemaining}");
         }
     }
+    
+    // Called by bumpers, bash toy, and any other scoring objects
+    public void AddScore(int points, string source)
+    {
+        currentScore += points;
+        UpdateScoreUI();
+        DebugLogger.Log($"{source} gave {points} points | Total: {currentScore}");
+    }
 
+    // Called by BallController when ball touches the drain layer
     public void BallDrained(string drainedBy)
     {
         LoseBall(drainedBy);
@@ -66,7 +85,7 @@ public class GameManager : MonoBehaviour
 
     private void GameOver()
     {
-        DebugLogger.Log("GAME OVER - No balls remaining!");
+        DebugLogger.Log($"GAME OVER | Final Score: {currentScore}");
         if (currentBall != null) currentBall.SetActive(false);
     }
 
@@ -77,5 +96,12 @@ public class GameManager : MonoBehaviour
         DebugLogger.Log($"Ball spawned | Balls remaining: {ballsRemaining}");
     }
 
+    private void UpdateScoreUI()
+    {
+        if (scoreText != null)
+            scoreText.text = $"SCORE: {currentScore}";
+    }
+
     public int GetBallsRemaining() => ballsRemaining;
+    public int GetScore() => currentScore;
 }

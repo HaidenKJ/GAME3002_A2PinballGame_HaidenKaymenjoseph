@@ -130,7 +130,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActiveBumper
   scoreValue: 100
-  reflectForce: 10
+  reflectForce: 25
 --- !u!54 &6187197125658433639
 Rigidbody:
   m_ObjectHideFlags: 0
